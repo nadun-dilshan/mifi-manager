@@ -1,16 +1,13 @@
 import { router } from 'expo-router';
-import { Text } from 'react-native';
-
 import { ListCard, NavRow, Screen, SectionLabel } from '@/components/ui';
 import { useAuth } from '@/context/auth';
 import { confirm, useAction } from '@/hooks/useAction';
+import { APP_VERSION } from '@/lib/app-info';
 import { api } from '@/lib/api';
 import { loadSnapshot } from '@/lib/snapshot';
-import { useColors } from '@/theme';
 import { markWidgetsSignedOut } from '@/widgets/bridge';
 
 export default function SettingsScreen() {
-  const c = useColors();
   const auth = useAuth();
   const { busy, run } = useAction();
 
@@ -125,7 +122,16 @@ export default function SettingsScreen() {
         />
       </ListCard>
 
-      <Text style={{ color: c.faint, fontSize: 12, textAlign: 'center' }}>MiFi Manager 1.0.0</Text>
+      <SectionLabel>About</SectionLabel>
+      <ListCard>
+        <NavRow
+          icon="sparkles-outline"
+          title="About MiFi Manager"
+          detail={`Version ${APP_VERSION} · Developed by Nadun Dilshan`}
+          onPress={() => router.push('/settings/about')}
+          last
+        />
+      </ListCard>
     </Screen>
   );
 }

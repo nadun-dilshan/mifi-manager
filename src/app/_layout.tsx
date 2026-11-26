@@ -34,6 +34,7 @@ function RootNavigator() {
         <Stack.Screen name="settings/lan" options={{ title: 'LAN & DHCP' }} />
         <Stack.Screen name="settings/device-info" options={{ title: 'Device info' }} />
         <Stack.Screen name="settings/password" options={{ title: 'Admin password' }} />
+        <Stack.Screen name="settings/about" options={{ title: 'About' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="login" options={{ headerShown: false }} />

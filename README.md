@@ -20,6 +20,8 @@ hotspot's Wi-Fi.
 - **System**: device info (firmware, IMEI, IMSI, ICCID), change the admin password, restart,
   factory reset.
 - **Home-screen widgets** (Android): a 4×2 status widget and a 2×1 signal-and-battery widget.
+- **About**: app version, a link to the developer's site, and **Check for updates**, which
+  opens this repository's [releases page](https://github.com/nadun-dilshan/mifi-manager/releases).
 
 Light and dark themes follow the phone's setting.
 
@@ -101,3 +103,7 @@ src/hooks/             data loading, form drafts, actions
 src/lib/               router client, API commands, formatting, widget snapshot
 src/widgets/           home-screen widgets and their background task
 ```
+
+## Author
+
+Developed by [Nadun Dilshan](https://nadun.me).

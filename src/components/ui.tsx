@@ -158,9 +158,20 @@ interface NavRowProps {
   tone?: 'default' | 'danger';
   last?: boolean;
   chevron?: boolean;
+  /** Shows an "opens elsewhere" icon instead of the chevron, for links that leave the app. */
+  external?: boolean;
 }
 
-export function NavRow({ icon, title, detail, onPress, tone = 'default', last, chevron = true }: NavRowProps) {
+export function NavRow({
+  icon,
+  title,
+  detail,
+  onPress,
+  tone = 'default',
+  last,
+  chevron = true,
+  external,
+}: NavRowProps) {
   const c = useColors();
   const color = tone === 'danger' ? c.danger : c.text;
   return (
@@ -195,7 +206,11 @@ export function NavRow({ icon, title, detail, onPress, tone = 'default', last, c
           </Text>
         ) : null}
       </View>
-      {chevron ? <Ionicons name="chevron-forward" size={18} color={c.faint} /> : null}
+      {external ? (
+        <Ionicons name="open-outline" size={17} color={c.faint} />
+      ) : chevron ? (
+        <Ionicons name="chevron-forward" size={18} color={c.faint} />
+      ) : null}
     </Pressable>
   );
 }
