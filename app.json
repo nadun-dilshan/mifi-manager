@@ -1,25 +1,68 @@
 {
   "expo": {
-    "name": "mifi-manager",
+    "name": "MiFi Manager",
     "slug": "mifi-manager",
+    "scheme": "mifimanager",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mifimanager.app"
     },
     "android": {
+      "package": "com.mifimanager.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#4F46E5",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true,
+            "buildArchs": ["arm64-v8a"]
+          }
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "MifiStatus",
+              "label": "MiFi Status",
+              "description": "Signal, battery, connected devices and connection state",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/widget-preview/status.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "MifiCompact",
+              "label": "MiFi Signal & Battery",
+              "description": "Signal strength and battery at a glance",
+              "minWidth": "110dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal|vertical",
+              "previewImage": "./assets/widget-preview/compact.png",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
+      ]
+    ]
   }
 }

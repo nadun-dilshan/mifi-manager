@@ -1,8 +1,10 @@
-import { registerRootComponent } from 'expo';
+import { registerWidgetTaskHandler } from 'react-native-android-widget';
 
-import App from './App';
+import { widgetTaskHandler } from './src/widgets/task-handler';
 
-// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
-// It also ensures that whether you load the app in Expo Go or in a native build,
-// the environment is set up appropriately
-registerRootComponent(App);
+// Home-screen widgets render through a headless task, so the handler has to be
+// registered before the router boots the app UI.
+registerWidgetTaskHandler(widgetTaskHandler);
+
+// eslint-disable-next-line import/first
+import 'expo-router/entry';
