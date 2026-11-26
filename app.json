@@ -28,7 +28,9 @@
         {
           "android": {
             "usesCleartextTraffic": true,
-            "buildArchs": ["arm64-v8a"]
+            "buildArchs": [
+              "arm64-v8a"
+            ]
           }
         }
       ],
@@ -63,6 +65,16 @@
           ]
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "a373d134-b792-435b-8ee5-db7bd8dcb165"
+      }
+    }
   }
 }
