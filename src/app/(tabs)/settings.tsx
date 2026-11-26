@@ -47,6 +47,35 @@ export default function SettingsScreen() {
           title="Wi-Fi hotspot"
           detail="Name, password, channel, on/off"
           onPress={() => router.push('/settings/wifi')}
+        />
+        <NavRow
+          icon="qr-code-outline"
+          title="Share Wi-Fi"
+          detail="QR code for guests to scan"
+          onPress={() => router.push('/settings/wifi-share')}
+          last
+        />
+      </ListCard>
+
+      <SectionLabel>Monitoring</SectionLabel>
+      <ListCard>
+        <NavRow
+          icon="notifications-outline"
+          title="Alerts"
+          detail="Low battery, lost connection, new devices"
+          onPress={() => router.push('/settings/alerts')}
+        />
+        <NavRow
+          icon="stats-chart-outline"
+          title="History"
+          detail="Signal, battery and temperature over time"
+          onPress={() => router.push('/history')}
+        />
+        <NavRow
+          icon="locate-outline"
+          title="Signal finder"
+          detail="Find the best spot for the router"
+          onPress={() => router.push('/signal')}
           last
         />
       </ListCard>
@@ -87,6 +116,18 @@ export default function SettingsScreen() {
 
       <SectionLabel>System</SectionLabel>
       <ListCard>
+        <NavRow
+          icon="shield-checkmark-outline"
+          title="Security check"
+          detail="Default and weak passwords"
+          onPress={() => router.push('/security')}
+        />
+        <NavRow
+          icon="save-outline"
+          title="Backup & restore"
+          detail="Save settings and put them back after a reset"
+          onPress={() => router.push('/settings/backup')}
+        />
         <NavRow
           icon="information-circle-outline"
           title="Device info"

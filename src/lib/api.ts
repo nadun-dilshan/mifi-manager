@@ -31,8 +31,8 @@ export const api = {
   overview: (o?: CallOptions) => read<Overview>('getoverview', o),
   sysInfo: (o?: CallOptions) => read<SysInfo>('getsysinfo', o),
   allStatus: (o?: CallOptions) => read<AllStatus>('getallstatus', o),
-  devices: async (): Promise<ConnectedDevice[]> => {
-    const list = await read<ConnectedDevice[] | null>('getconnectedsta');
+  devices: async (o?: CallOptions): Promise<ConnectedDevice[]> => {
+    const list = await read<ConnectedDevice[] | null>('getconnectedsta', o);
     return Array.isArray(list) ? list : [];
   },
   produceInfo: () => read<ProduceInfo>('getproduceinfo'),

@@ -18,6 +18,8 @@ export interface Colors {
   warnSoft: string;
   danger: string;
   dangerSoft: string;
+  /** Line colour for single-series charts; checked for contrast against `card`. */
+  chart: string;
 }
 
 export const light: Colors = {
@@ -38,6 +40,7 @@ export const light: Colors = {
   warnSoft: '#FEF3C7',
   danger: '#DC2626',
   dangerSoft: '#FEE2E2',
+  chart: '#4F46E5',
 };
 
 export const dark: Colors = {
@@ -58,6 +61,7 @@ export const dark: Colors = {
   warnSoft: '#2E2410',
   danger: '#F87171',
   dangerSoft: '#321618',
+  chart: '#7C87F7',
 };
 
 export function useColors(): Colors {

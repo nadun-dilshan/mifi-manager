@@ -8,18 +8,45 @@ hotspot's Wi-Fi.
 
 ## Features
 
-- **Home**: signal strength, carrier, connection state, battery, connected-device count, CPU
-  temperature, uptime, WAN IP. Refreshes every 10 seconds while open.
-- **Devices**: every device connected to the hotspot, with IP and MAC address.
+**Status**
+
+- **Home**: signal strength, carrier, connection state, battery with an estimate of time
+  left, connected-device count, CPU temperature, uptime, WAN IP. Refreshes every 10 seconds
+  while open.
+- **Quick actions** on Home: share Wi-Fi, signal finder, history, switch SIM, backup, restart.
+- **History**: charts of signal, battery, temperature and device count over the last 1, 6 or
+  24 hours. Touch and drag to read any point.
+- **Signal finder**: a large live signal reading with best, average and worst, for finding
+  the best place to put the router.
+- **Home-screen widgets** (Android): a 4×2 status widget and a 2×1 signal-and-battery widget.
+
+**Devices**
+
+- **Connected devices** with IP and MAC address, plus devices seen before and when.
+- **Known devices**: give a device a name and mark it trusted. A device that has never
+  connected before is flagged as new.
+
+**Safety**
+
+- **Security check**: warns about a factory-default or weak Wi-Fi password, an open network,
+  older WPA security, and a factory-default admin password, with a shortcut to fix each.
+- **Alerts**: notifications for low battery, internet lost or restored, a new device joining,
+  overheating and a missing SIM. Each can be switched off, and the battery and temperature
+  thresholds are adjustable.
+- **Backup and restore**: saves the Wi-Fi, APN, network mode, LAN and connection-check
+  settings on the phone, and puts them back in one step after a factory reset. Backups can
+  be shared as text and imported again.
+
+**Settings**
+
 - **Wi-Fi hotspot**: turn it on or off, change the name, password, security, channel and
-  visibility.
+  visibility. **Share Wi-Fi** shows a QR code guests can scan to join.
 - **Mobile network**: network mode (auto, 4G only, 3G only), SIM slot, USB tethering.
 - **APN**: switch between the stored access points or add a new one.
 - **Connection check**: the addresses the router uses to detect a dropped link.
 - **LAN & DHCP**: router address, subnet mask, DHCP range and lease time.
 - **System**: device info (firmware, IMEI, IMSI, ICCID), change the admin password, restart,
   factory reset.
-- **Home-screen widgets** (Android): a 4×2 status widget and a 2×1 signal-and-battery widget.
 - **About**: app version, a link to the developer's site, and **Check for updates**, which
   opens this repository's [releases page](https://github.com/nadun-dilshan/mifi-manager/releases).
 
@@ -43,6 +70,24 @@ Long-press the home screen, choose **Widgets**, and look for **MiFi Manager**.
 Widgets refresh when the app is open, when you tap their refresh control, and on Android's
 own schedule, which is at most once every 30 minutes. They need Remember me to be on, because
 they sign in with the saved login in the background.
+
+### Alerts and background checks
+
+While the app is open, alerts appear within seconds. With alerts switched on, the app also
+checks the router in the background about every 15 minutes. Android decides the exact timing
+and may delay checks to save battery. Background checks need Remember me to be on and the
+phone to be on the hotspot's Wi-Fi.
+
+History is recorded the same way: about one reading a minute while the app is open, and one
+per background check otherwise. Readings are kept on the phone only.
+
+### Known devices
+
+The first time the app sees the device list, everything connected is treated as yours. After
+that, a MAC address it has not seen before is marked **New** until you trust it. Many phones
+use a random MAC address per network, so one phone can occasionally appear as a new device.
+The router has no command to block a device; changing the Wi-Fi password is the way to remove
+one.
 
 ## Build and install (Android)
 
@@ -72,6 +117,9 @@ For development with live reload: `npx expo run:android`.
 - **Firmware upgrade** and **IMEI rewrite** exist in the router's API but are deliberately not
   included: the first can brick the device, and changing an IMEI is illegal in many countries.
 - **APNs cannot be deleted**: the router's API has no command for it.
+- **No per-device blocking, data-usage counters, SMS or port forwarding**: the router's API
+  has no commands for them.
+- **Widgets and background checks do not run in Expo Go.** They need an installed build.
 - The API was worked out from firmware `HMIFI_X8S1U1W1_CM_V01_0727`. Other firmware versions
   may differ.
 - The router's web server handles one request at a time and locks up under bursts, so the app
@@ -100,7 +148,8 @@ src/app/               screens (Expo Router)
 src/components/        shared UI
 src/context/auth.tsx   sign-in state
 src/hooks/             data loading, form drafts, actions
-src/lib/               router client, API commands, formatting, widget snapshot
+src/lib/               router client and API commands, plus the logic for alerts,
+                       history, known devices, security checks, backups and charts
 src/widgets/           home-screen widgets and their background task
 ```
 

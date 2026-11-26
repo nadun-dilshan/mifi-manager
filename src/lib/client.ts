@@ -197,6 +197,11 @@ export function hasCredentials(): boolean {
   return credentials !== null;
 }
 
+/** True when the password in use is one of `candidates` (without exposing the password). */
+export function passwordIsOneOf(candidates: string[]): boolean {
+  return credentials !== null && candidates.includes(credentials.password);
+}
+
 export function currentHost(): string {
   return credentials?.host ?? DEFAULT_HOST;
 }

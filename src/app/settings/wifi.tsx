@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 
 import { Button, Card, Chips, Field, LoadGate, Notice, Screen, ToggleRow } from '@/components/ui';
@@ -128,6 +129,13 @@ export default function WifiScreen() {
                 onValueChange={(wifibrocast) => patch({ wifibrocast })}
               />
             </Card>
+
+            <Button
+              title="Share with a QR code"
+              variant="secondary"
+              icon="qr-code-outline"
+              onPress={() => router.push('/settings/wifi-share')}
+            />
 
             <Button
               title="Save changes"

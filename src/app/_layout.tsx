@@ -1,14 +1,23 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { ToastProvider } from '@/components/toast';
 import { AuthProvider, useAuth } from '@/context/auth';
+import { loadAlertSettings } from '@/lib/alerts';
+import { setBackgroundChecks } from '@/lib/background';
 import { useColors } from '@/theme';
 
 function RootNavigator() {
   const c = useColors();
   const { status } = useAuth();
+
+  // Re-arm the periodic background check after a reinstall or restart, if alerts are on.
+  useEffect(() => {
+    if (status !== 'signedIn') return;
+    void loadAlertSettings().then((settings) => setBackgroundChecks(settings.enabled));
+  }, [status]);
 
   if (status === 'loading') {
     return <View style={{ flex: 1, backgroundColor: c.bg }} />;
@@ -34,7 +43,14 @@ function RootNavigator() {
         <Stack.Screen name="settings/lan" options={{ title: 'LAN & DHCP' }} />
         <Stack.Screen name="settings/device-info" options={{ title: 'Device info' }} />
         <Stack.Screen name="settings/password" options={{ title: 'Admin password' }} />
+        <Stack.Screen name="settings/wifi-share" options={{ title: 'Share Wi-Fi' }} />
+        <Stack.Screen name="settings/alerts" options={{ title: 'Alerts' }} />
+        <Stack.Screen name="settings/backup" options={{ title: 'Backup & restore' }} />
         <Stack.Screen name="settings/about" options={{ title: 'About' }} />
+        <Stack.Screen name="security" options={{ title: 'Security check' }} />
+        <Stack.Screen name="history" options={{ title: 'History' }} />
+        <Stack.Screen name="signal" options={{ title: 'Signal finder' }} />
+        <Stack.Screen name="device/[mac]" options={{ title: 'Device' }} />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="login" options={{ headerShown: false }} />

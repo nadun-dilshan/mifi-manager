@@ -299,7 +299,14 @@ export function Field({ label, error, hint, secret, ...input }: FieldProps) {
             setFocused(false);
             input.onBlur?.(e);
           }}
-          style={{ flex: 1, color: c.text, fontSize: 16, paddingHorizontal: 14, paddingVertical: 12 }}
+          style={{
+            flex: 1,
+            color: c.text,
+            fontSize: 16,
+            paddingHorizontal: 14,
+            paddingVertical: 12,
+            ...(input.multiline ? { minHeight: 120, textAlignVertical: 'top' as const } : null),
+          }}
         />
         {secret ? (
           <Pressable
@@ -524,9 +531,11 @@ interface StatProps {
   label: string;
   value: string;
   tone?: 'default' | 'warn' | 'danger';
+  /** Small extra line under the label, e.g. an estimate. */
+  detail?: string;
 }
 
-export function Stat({ icon, label, value, tone = 'default' }: StatProps) {
+export function Stat({ icon, label, value, tone = 'default', detail }: StatProps) {
   const c = useColors();
   const valueColor = tone === 'danger' ? c.danger : tone === 'warn' ? c.warn : c.text;
   return (
@@ -545,6 +554,7 @@ export function Stat({ icon, label, value, tone = 'default' }: StatProps) {
         {value}
       </Text>
       <Text style={{ color: c.sub, fontSize: 13 }}>{label}</Text>
+      {detail ? <Text style={{ color: c.faint, fontSize: 12 }}>{detail}</Text> : null}
     </View>
   );
 }
