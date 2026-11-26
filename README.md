@@ -218,3 +218,7 @@ src/widgets/           home-screen widgets and their background task
 ## Author
 
 Developed by [Nadun Dilshan](https://nadun.me).
+
+## Licence
+
+Released under the [MIT licence](LICENSE).
