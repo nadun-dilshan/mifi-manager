@@ -107,6 +107,33 @@ publish it, configure a release keystore first.
 
 For development with live reload: `npx expo run:android`.
 
+## Releases
+
+Installable APKs are published on the
+[releases page](https://github.com/nadun-dilshan/mifi-manager/releases). In the app,
+**Settings → About → Check for updates** opens the same page.
+
+A release is made automatically whenever a pull request is merged into `main`
+([.github/workflows/release.yml](.github/workflows/release.yml)):
+
+1. The code is type-checked.
+2. Expo builds the APK in the cloud (EAS Build, `preview` profile).
+3. The APK is attached to a new GitHub release tagged `v<version>-build.<number>`, for example
+   `v1.0.0-build.2`.
+
+The build number goes up by one on every build. The version comes from `version` in
+[app.json](app.json), so raise it there when a change deserves a new version number.
+
+Pull requests that change only Markdown files do not trigger a release. To release by hand,
+or to retry after a failure, open the **Actions** tab, choose **Release**, and press
+**Run workflow**.
+
+**One-time setup:** the workflow needs an Expo access token.
+
+1. Create a token at <https://expo.dev/settings/access-tokens>.
+2. In the GitHub repository, go to **Settings → Secrets and variables → Actions**, add a new
+   repository secret named `EXPO_TOKEN`, and paste the token.
+
 ## Limitations
 
 - **Phone must be on the hotspot's Wi-Fi.** If the hotspot has no internet and the phone has

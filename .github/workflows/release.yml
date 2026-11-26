@@ -1,0 +1,124 @@
+name: Release
+
+# Runs when a pull request is merged into main: builds the Android APK on Expo (EAS Build)
+# and publishes it as a GitHub Release. "Run workflow" on the Actions tab does the same by
+# hand, for example to retry after a failure.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    # A change that touches only documentation does not need a new build.
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One release at a time, so build numbers and tags stay in order.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build APK and publish release
+    # A pull request closed without merging must not release anything.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      # The commit to build: the merge commit for a merged pull request, otherwise the
+      # commit the workflow was started on.
+      RELEASE_SHA: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+
+    steps:
+      - name: Check out the merged code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check that the Expo token is configured
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::The EXPO_TOKEN secret is missing. Create an access token at https://expo.dev/settings/access-tokens and add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          packager: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fail here, before a cloud build is spent, if the code does not type-check.
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build the APK on Expo
+        id: build
+        run: |
+          eas build --platform android --profile preview --non-interactive --wait --json > build.json
+          BUILD_ID=$(jq -r 'if type == "array" then .[0].id else .id end' build.json)
+          if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" = "null" ]; then
+            echo "::error::Could not read the build id from the EAS output."
+            cat build.json
+            exit 1
+          fi
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Read the build details
+        id: details
+        env:
+          BUILD_ID: ${{ steps.build.outputs.build_id }}
+        run: |
+          eas build:view "$BUILD_ID" --json > details.json
+          STATUS=$(jq -r '.status' details.json)
+          APK_URL=$(jq -r '.artifacts.applicationArchiveUrl // .artifacts.buildUrl // empty' details.json)
+          VERSION=$(jq -r '.appVersion' details.json)
+          BUILD_NUMBER=$(jq -r '.appBuildVersion' details.json)
+          if [ "$STATUS" != "FINISHED" ] || [ -z "$APK_URL" ]; then
+            echo "::error::The EAS build did not finish with an APK (status: $STATUS)."
+            exit 1
+          fi
+          {
+            echo "apk_url=$APK_URL"
+            echo "version=$VERSION"
+            echo "build_number=$BUILD_NUMBER"
+            echo "tag=v${VERSION}-build.${BUILD_NUMBER}"
+            echo "apk_name=MiFi-Manager-${VERSION}-build${BUILD_NUMBER}.apk"
+          } >> "$GITHUB_OUTPUT"
+
+      # Values are passed through the environment rather than pasted into the script text.
+      - name: Download the APK
+        env:
+          APK_URL: ${{ steps.details.outputs.apk_url }}
+          APK_NAME: ${{ steps.details.outputs.apk_name }}
+        run: curl --fail --location --silent --show-error --output "$APK_NAME" "$APK_URL"
+
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.details.outputs.tag }}
+          APK_NAME: ${{ steps.details.outputs.apk_name }}
+          VERSION: ${{ steps.details.outputs.version }}
+          BUILD_NUMBER: ${{ steps.details.outputs.build_number }}
+        run: |
+          gh release create "$TAG" "$APK_NAME" \
+            --target "$RELEASE_SHA" \
+            --title "MiFi Manager $VERSION (build $BUILD_NUMBER)" \
+            --generate-notes \
+            --latest
