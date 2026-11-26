@@ -7,7 +7,7 @@ import { confirm, useAction } from '@/hooks/useAction';
 import { api } from '@/lib/api';
 import { loadSnapshot } from '@/lib/snapshot';
 import { useColors } from '@/theme';
-import { markWidgetsSignedOut } from '@/widgets/update';
+import { markWidgetsSignedOut } from '@/widgets/bridge';
 
 export default function SettingsScreen() {
   const c = useColors();

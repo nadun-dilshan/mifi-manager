@@ -1,10 +1,8 @@
-import { registerWidgetTaskHandler } from 'react-native-android-widget';
+import { registerWidgets } from './src/widgets/bridge';
 
-import { widgetTaskHandler } from './src/widgets/task-handler';
-
-// Home-screen widgets render through a headless task, so the handler has to be
-// registered before the router boots the app UI.
-registerWidgetTaskHandler(widgetTaskHandler);
+// Home-screen widgets render through a headless task that must be registered at startup.
+// This is skipped automatically where widgets are unavailable (Expo Go, iOS).
+registerWidgets();
 
 // eslint-disable-next-line import/first
 import 'expo-router/entry';

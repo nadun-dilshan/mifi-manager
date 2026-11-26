@@ -5,7 +5,7 @@ import { useRouterData } from '@/hooks/useRouterData';
 import { api } from '@/lib/api';
 import { formatUptime, signalQuality, toNumber } from '@/lib/format';
 import { space, useColors } from '@/theme';
-import { syncWidgets } from '@/widgets/update';
+import { syncWidgets } from '@/widgets/bridge';
 
 async function loadDashboard() {
   const status = await api.allStatus();
