@@ -41,7 +41,7 @@ jobs:
     timeout-minutes: 120
     outputs:
       tag: ${{ steps.details.outputs.tag }}
-      version: ${{ steps.details.outputs.version }}
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Check out the merged code
@@ -76,6 +76,31 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
+      # Each release gets the next version: 1.0.0, then 1.0.1, and so on. Raising "version"
+      # in app.json by hand (to 1.1.0, say) starts a new series. See scripts/next-version.mjs.
+      - name: Decide the version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          CONFIGURED=$(jq -r '.expo.version' app.json)
+          TAGS=$(gh release list --limit 500 --json tagName --jq '.[].tagName')
+          VERSION=$(node scripts/next-version.mjs "$CONFIGURED" $TAGS)
+          echo "Releasing version $VERSION (app.json says $CONFIGURED)"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # The version is written into app.json for this build only. It is committed in the
+      # runner's copy (never pushed) so the files EAS uploads are certain to carry it.
+      - name: Apply the version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          jq --arg v "$VERSION" '.expo.version = $v' app.json > app.json.tmp && mv app.json.tmp app.json
+          if ! git diff --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet --all --message "Release $VERSION"
+          fi
+
       - name: Build the production APK on Expo
         id: build
         run: |
@@ -92,22 +117,26 @@ jobs:
         id: details
         env:
           BUILD_ID: ${{ steps.build.outputs.build_id }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           eas build:view "$BUILD_ID" --json > details.json
           STATUS=$(jq -r '.status' details.json)
           APP_URL=$(jq -r '.artifacts.applicationArchiveUrl // .artifacts.buildUrl // empty' details.json)
-          VERSION=$(jq -r '.appVersion' details.json)
+          BUILT_VERSION=$(jq -r '.appVersion' details.json)
           BUILD_NUMBER=$(jq -r '.appBuildVersion' details.json)
           if [ "$STATUS" != "FINISHED" ] || [ -z "$APP_URL" ]; then
             echo "::error::The Android build did not finish with an APK (status: $STATUS)."
             exit 1
           fi
+          if [ "$BUILT_VERSION" != "$VERSION" ]; then
+            echo "::error::The APK was built as version $BUILT_VERSION, not $VERSION. Not releasing it under the wrong name."
+            exit 1
+          fi
           {
             echo "app_url=$APP_URL"
-            echo "version=$VERSION"
             echo "build_number=$BUILD_NUMBER"
-            echo "tag=v${VERSION}-build.${BUILD_NUMBER}"
-            echo "file_name=MiFi-Manager-${VERSION}-android-build${BUILD_NUMBER}.apk"
+            echo "tag=v${VERSION}"
+            echo "file_name=MiFi-Manager-${VERSION}-android.apk"
           } >> "$GITHUB_OUTPUT"
 
       # Values are passed through the environment rather than pasted into the script text.
@@ -122,12 +151,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.details.outputs.tag }}
           FILE_NAME: ${{ steps.details.outputs.file_name }}
-          VERSION: ${{ steps.details.outputs.version }}
-          BUILD_NUMBER: ${{ steps.details.outputs.build_number }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           gh release create "$TAG" "$FILE_NAME" \
             --target "$RELEASE_SHA" \
-            --title "MiFi Manager $VERSION (build $BUILD_NUMBER)" \
+            --title "MiFi Manager $VERSION" \
             --generate-notes \
             --latest
 
@@ -162,6 +190,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Same version as the Android build in this release.
+      - name: Apply the version
+        env:
+          VERSION: ${{ needs.android.outputs.version }}
+        run: |
+          jq --arg v "$VERSION" '.expo.version = $v' app.json > app.json.tmp && mv app.json.tmp app.json
+          if ! git diff --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit --quiet --all --message "Release $VERSION"
+          fi
+
       # Non-interactive: this uses the signing certificate and profile already stored on EAS.
       - name: Build the production iOS app on Expo
         id: build
@@ -179,19 +218,18 @@ jobs:
         id: details
         env:
           BUILD_ID: ${{ steps.build.outputs.build_id }}
+          VERSION: ${{ needs.android.outputs.version }}
         run: |
           eas build:view "$BUILD_ID" --json > details.json
           STATUS=$(jq -r '.status' details.json)
           APP_URL=$(jq -r '.artifacts.applicationArchiveUrl // .artifacts.buildUrl // empty' details.json)
-          VERSION=$(jq -r '.appVersion' details.json)
-          BUILD_NUMBER=$(jq -r '.appBuildVersion' details.json)
           if [ "$STATUS" != "FINISHED" ] || [ -z "$APP_URL" ]; then
             echo "::error::The iOS build did not finish with an app archive (status: $STATUS)."
             exit 1
           fi
           {
             echo "app_url=$APP_URL"
-            echo "file_name=MiFi-Manager-${VERSION}-ios-build${BUILD_NUMBER}.ipa"
+            echo "file_name=MiFi-Manager-${VERSION}-ios.ipa"
           } >> "$GITHUB_OUTPUT"
 
       - name: Download the iOS app
