@@ -109,7 +109,7 @@ For development with live reload: `npx expo run:android`.
 
 ## Releases
 
-Installable APKs are published on the
+Production builds are published on the
 [releases page](https://github.com/nadun-dilshan/mifi-manager/releases). In the app,
 **Settings → About → Check for updates** opens the same page.
 
@@ -117,9 +117,11 @@ A release is made automatically whenever a pull request is merged into `main`
 ([.github/workflows/release.yml](.github/workflows/release.yml)):
 
 1. The code is type-checked.
-2. Expo builds the APK in the cloud (EAS Build, `preview` profile).
+2. Expo builds the production Android app in the cloud (EAS Build) as an APK.
 3. The APK is attached to a new GitHub release tagged `v<version>-build.<number>`, for example
    `v1.0.0-build.2`.
+4. If iOS releases are switched on, Expo builds the production iOS app and the `.ipa` is added
+   to the same release.
 
 The build number goes up by one on every build. The version comes from `version` in
 [app.json](app.json), so raise it there when a change deserves a new version number.
@@ -128,11 +130,33 @@ Pull requests that change only Markdown files do not trigger a release. To relea
 or to retry after a failure, open the **Actions** tab, choose **Release**, and press
 **Run workflow**.
 
-**One-time setup:** the workflow needs an Expo access token.
+### One-time setup
+
+The workflow needs an Expo access token.
 
 1. Create a token at <https://expo.dev/settings/access-tokens>.
 2. In the GitHub repository, go to **Settings → Secrets and variables → Actions**, add a new
    repository secret named `EXPO_TOKEN`, and paste the token.
+
+### Switching on iOS releases
+
+iOS builds need a paid Apple Developer Program membership.
+
+1. On a Mac, run `npx eas-cli@latest build --platform ios --profile production` once and sign
+   in with your Apple ID when asked. EAS creates the distribution certificate and provisioning
+   profile and stores them, so later builds need no sign-in.
+2. In the GitHub repository, go to **Settings → Secrets and variables → Actions → Variables**
+   and add a variable named `IOS_RELEASE` with the value `true`.
+
+The production `.ipa` is signed for the App Store. It cannot be installed by downloading it
+from the release; it is there to be submitted to TestFlight or the App Store, for example with
+`npx eas-cli@latest submit --platform ios`. Widgets are Android-only.
+
+### Android APK or Play Store bundle
+
+The production profile builds an `.apk` so it can be installed straight from the release. The
+Play Store needs an `.aab` instead: remove `"buildType": "apk"` from the production profile in
+[eas.json](eas.json) to get one.
 
 ## Limitations
 
