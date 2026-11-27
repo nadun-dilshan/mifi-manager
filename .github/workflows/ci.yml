@@ -1,0 +1,111 @@
+name: CI
+
+# Checks every pull request before it is merged and reports pass or fail on the pull request.
+# Everything runs on GitHub's own machine: nothing is sent to Expo and no release is made.
+#
+#   Type-check and bundle   the code type-checks and the JavaScript bundles for both platforms
+#   Android build           the Android app compiles into an APK
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+# A new push to a pull request replaces the checks still running for the previous push.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Type-check and bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      # Fails if package.json and package-lock.json disagree, which is what broke the first
+      # cloud build of this project.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Check the release version script
+        run: |
+          RESULT=$(node scripts/next-version.mjs 1.0.0 v1.0.0 v1.0.1)
+          if [ "$RESULT" != "1.0.2" ]; then
+            echo "::error::scripts/next-version.mjs returned '$RESULT' for 1.0.0 with releases v1.0.0 and v1.0.1; expected 1.0.2."
+            exit 1
+          fi
+
+      # Bundling catches broken imports and syntax that type-checking alone can miss.
+      - name: Bundle for Android
+        run: npx expo export --platform android --output-dir dist-android
+
+      - name: Bundle for iOS
+        run: npx expo export --platform ios --output-dir dist-ios
+
+  android:
+    name: Android build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The android/ folder is generated from app.json, so a bad setting there fails here.
+      - name: Generate the Android project
+        run: npx expo prebuild --platform android --no-install
+
+      # Reuses downloaded Gradle and library files between runs to keep the build quick.
+      - name: Restore the Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      # Same kind of build as a release (optimised, JavaScript bundled in), signed with a
+      # throwaway debug key. The APK is discarded; only pass or fail matters here.
+      - name: Compile the Android app
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --console=plain
+
+      - name: Confirm an APK was produced
+        run: |
+          APK=$(find android/app/build/outputs/apk/release -name '*.apk' | head -n 1)
+          if [ -z "$APK" ]; then
+            echo "::error::The build finished without producing an APK."
+            exit 1
+          fi
+          echo "Built $(basename "$APK") ($(du -h "$APK" | cut -f1))"

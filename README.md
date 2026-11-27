@@ -169,6 +169,19 @@ The production profile builds an `.apk` so it can be installed straight from the
 Play Store needs an `.aab` instead: remove `"buildType": "apk"` from the production profile in
 [eas.json](eas.json) to get one.
 
+## Checks on pull requests
+
+Every pull request is checked automatically
+([.github/workflows/ci.yml](.github/workflows/ci.yml)), and the result shows on the pull
+request as a pass or a fail:
+
+- **Type-check and bundle**: dependencies install from the lockfile, the code type-checks, and
+  the JavaScript bundles for Android and iOS.
+- **Android build**: the Android project is generated and compiled into an APK.
+
+These run on GitHub's own machine. They do not use Expo's build service and do not create a
+release; that only happens when a pull request is merged into `main`.
+
 ## Limitations
 
 - **Phone must be on the hotspot's Wi-Fi.** If the hotspot has no internet and the phone has
