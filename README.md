@@ -117,14 +117,25 @@ A release is made automatically whenever a pull request is merged into `main`
 ([.github/workflows/release.yml](.github/workflows/release.yml)):
 
 1. The code is type-checked.
-2. Expo builds the production Android app in the cloud (EAS Build) as an APK.
-3. The APK is attached to a new GitHub release tagged `v<version>-build.<number>`, for example
-   `v1.0.0-build.2`.
-4. If iOS releases are switched on, Expo builds the production iOS app and the `.ipa` is added
-   to the same release.
+2. The next version number is chosen (see below).
+3. Expo builds the production Android app in the cloud (EAS Build) as an APK.
+4. A GitHub release tagged `v<version>` is created with `MiFi-Manager-<version>-android.apk`
+   attached.
+5. If iOS releases are switched on, Expo builds the production iOS app and
+   `MiFi-Manager-<version>-ios.ipa` is added to the same release.
 
-The build number goes up by one on every build. The version comes from `version` in
-[app.json](app.json), so raise it there when a change deserves a new version number.
+### Version numbers
+
+Every release gets the next version automatically: `1.0.0`, then `1.0.1`, `1.0.2` and so on.
+The pipeline looks at the releases already published and adds one to the last number.
+
+To start a new series, raise `version` in [app.json](app.json) by hand in a pull request, for
+example to `1.1.0` or `2.0.0`. That release uses your number, and later ones continue from it
+(`1.1.1`, `1.1.2`, ...).
+
+The version in `app.json` is not rewritten after each release, so it can lag behind the latest
+release; the published releases are the record. The rule lives in
+[scripts/next-version.mjs](scripts/next-version.mjs).
 
 Pull requests that change only Markdown files do not trigger a release. To release by hand,
 or to retry after a failure, open the **Actions** tab, choose **Release**, and press
@@ -157,6 +168,19 @@ from the release; it is there to be submitted to TestFlight or the App Store, fo
 The production profile builds an `.apk` so it can be installed straight from the release. The
 Play Store needs an `.aab` instead: remove `"buildType": "apk"` from the production profile in
 [eas.json](eas.json) to get one.
+
+## Checks on pull requests
+
+Every pull request is checked automatically
+([.github/workflows/ci.yml](.github/workflows/ci.yml)), and the result shows on the pull
+request as a pass or a fail:
+
+- **Type-check and bundle**: dependencies install from the lockfile, the code type-checks, and
+  the JavaScript bundles for Android and iOS.
+- **Android build**: the Android project is generated and compiled into an APK.
+
+These run on GitHub's own machine. They do not use Expo's build service and do not create a
+release; that only happens when a pull request is merged into `main`.
 
 ## Limitations
 
@@ -207,3 +231,7 @@ src/widgets/           home-screen widgets and their background task
 ## Author
 
 Developed by [Nadun Dilshan](https://nadun.me).
+
+## Licence
+
+Released under the [MIT licence](LICENSE).
